@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  pocketbase:
+    image: augustodelg/pocketbase
+    ports:
+      - 8090:8090
+    volumes:
+      - pocketbase:/usr/local/bin/pb_data
+volumes:
+  pocketbase:
