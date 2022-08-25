@@ -6,7 +6,7 @@
 
 ## Docker Run
 ```bash
-docker run --name pocketbase -p 8090:8090 -v pocketbase-data:/usr/local/bin/pb_data augustodelg/pocketbase:latest 
+docker run --name pocketbase -p 8090:8090 -v pocketbase-data:/pb_data augustodelg/pocketbase:latest 
 ```
 ## Docker Compose
 
