@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Fetch latest pocketbase version
         id: pocketbase
-        uses: actions/typescript-action@main
+        uses: augustodelg/repo-get-releases@main
         with:
           repository: pocketbase/pocketbase
           excludes: draft,prerelease
