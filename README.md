@@ -1,8 +1,16 @@
 
 # PocketBase
-⚠️**UNOFFICIAL Pocketbase container images**⚠️
+
+⚠️**UNOFFICIAL Pocketbase container images**⚠
+
+   <a aria-label="Latest Pocketbase Version" href="https://github.com/pocketbase/pocketbase/releases" target="_blank">
+    <img alt="Latest Pocketbase Version" src="https://img.shields.io/github/v/release/pocketbase/pocketbase?color=success&display_name=tag&label=latest&logo=docker&logoColor=%23fff&sort=semver&style=flat-square">
+  </a>
+
 
 [PocketBase](https://pocketbase.io) is an open source backend solution made in Go.
+
+
 
 ## Docker Run
 ```bash
@@ -27,4 +35,5 @@ volumes:
   pocketbase-data:
 ```
 ## TODO
-- Make an  Github Action to automatically build images for each new version.
+- ~~Make an  Github Action to automatically build images for each new version.~~
+- Supporting arm64 and armv7 architectures.
