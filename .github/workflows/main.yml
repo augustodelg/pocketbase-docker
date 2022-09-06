@@ -23,7 +23,7 @@ jobs:
       - name: Read file contents
         id: set_processed_version
         run: |
-          version=`cat ./version`
+          version=`cat ./.version`
           echo "::set-output name=processed_version::$version"
             
       - name: Cancel if there is no changes
