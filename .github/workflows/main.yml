@@ -68,13 +68,13 @@ jobs:
           
       - name: Overwrite version file
         run: |
-          echo "${{ steps.set_var.outputs.version }}" >  .version
+          echo "${{ steps.pocketbase.outputs.version }}" >  .version
           
       - name: Commit files
         run: |
           git config --local user.email "taca@github-actions.com"
           git config --local user.name "taca-bot"
-          git commit -m "Commit for version ${{ steps.set_var.outputs.version }}" -a
+          git commit -m "Commit for version ${{ steps.pocketbase.outputs.version }}" -a
           
       - name: Push changes
         uses: ad-m/github-push-action@master
