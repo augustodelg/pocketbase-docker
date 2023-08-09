@@ -14,7 +14,7 @@
 
 ## Docker Run
 ```bash
-docker run --name pocketbase -p 8090:8090 -v pocketbase-data:/pb_data augustodelg/pocketbase:latest 
+docker run --name pocketbase -p 8090:8090 -v pocketbase-data:/pb_data augustodelg/pocketbase:latest
 ```
 ## Docker Compose
 
@@ -36,4 +36,4 @@ volumes:
 ```
 ## TODO
 - ~~Make an  Github Action to automatically build images for each new version.~~
-- Supporting arm64 and armv7 architectures.
+- ~~Supporting arm64 and armv7 architectures.~~
