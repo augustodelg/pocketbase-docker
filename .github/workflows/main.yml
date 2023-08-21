@@ -56,21 +56,47 @@ jobs:
           tags: |
             type=semver,pattern={{version}},value=${{ steps.pocketbase.outputs.version }}
 
-      - name: Build and push
+      - name: Build and push linux/amd64
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
           build-args: |
             POCKETBASE_VERSION=${{ steps.pocketbase.outputs.version }}
-            BUILDPLATFORM=${{ build.platform }}
-            TARGETPLATFORM=${{ build.platform }}
+            TARGETPLATFORM=linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64/v7,linux/arm64/v8
-
+          
+      - name: Build and push linux/arm64/v7
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          build-args: |
+            POCKETBASE_VERSION=${{ steps.pocketbase.outputs.version }}
+            TARGETPLATFORM=linux/arm64/v7
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/arm64/v7
+          
+      - name: Build and push linux/arm64/v8
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          build-args: |
+            POCKETBASE_VERSION=${{ steps.pocketbase.outputs.version }}
+            TARGETPLATFORM=linux/arm64/v8
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/arm64/v8
 
       - name: Overwrite version file
         run: |
