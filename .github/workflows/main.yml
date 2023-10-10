@@ -25,10 +25,10 @@ jobs:
         with:
           repository: pocketbase/pocketbase
           excludes: draft,prerelease
-
-      - name: Checkout code
-        uses: actions/checkout@v1
-
+          
+      - name: Checkout
+        uses: actions/checkout@v3
+        
       - name: Read file contents
         id: set_processed_version
         run: |
@@ -41,8 +41,7 @@ jobs:
         with:
           script: |
             core.setFailed('Version already released')
-      - name: Checkout
-        uses: actions/checkout@v3
+
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -116,9 +115,22 @@ jobs:
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)          
+
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            --name ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }}
+
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            --name ${{ env.REGISTRY_IMAGE }}:latest
+
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            --push         
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+          
+      - name: Checkout
+        uses: actions/checkout@v3
+        
       - name: Overwrite version file
         run: |
           echo "${{ steps.pocketbase.outputs.version }}" >  .version
