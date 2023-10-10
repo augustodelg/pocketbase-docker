@@ -64,19 +64,20 @@ jobs:
         with:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
-            type=semver,pattern={{version}},value=${{ steps.pocketbase.outputs.version }}
+            type=semver,pattern={{version}},value=${{ steps.pocketbase.outputs.version }}-${{ matrix.platform }}
 
       - name: Build and push 
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             POCKETBASE_VERSION=${{ steps.pocketbase.outputs.version }}
             TARGETPLATFORM=${{ matrix.platform }}
-          tags: ${{ steps.meta.outputs.tags }}-${{ matrix.platform }}
+          tags: ${{ steps.meta.outputs.tags }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-          labels: ${{ steps.meta.outputs.labels }}
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
