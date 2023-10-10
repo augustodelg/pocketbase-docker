@@ -8,8 +8,6 @@ RUN apk update && apk add curl wget unzip
 RUN addgroup -S pocketbase && adduser -S pocketbase -G pocketbase
 RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
         wget https://github.com/pocketbase/pocketbase/releases/download/v${POCKETBASE_VERSION}/pocketbase_${POCKETBASE_VERSION}_linux_amd64.zip -O '/tmp/pocketbase.zip'; \
-    elif [ "${TARGETPLATFORM}" = "linux/arm64/v7" ]; then \
-        wget https://github.com/pocketbase/pocketbase/releases/download/v${POCKETBASE_VERSION}/pocketbase_${POCKETBASE_VERSION}_linux_armv7.zip -O '/tmp/pocketbase.zip'; \
     elif [ "${TARGETPLATFORM}" = "linux/arm64/v8" ]; then \
         wget https://github.com/pocketbase/pocketbase/releases/download/v${POCKETBASE_VERSION}/pocketbase_${POCKETBASE_VERSION}_linux_arm64.zip -O '/tmp/pocketbase.zip'; \
     elif [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
