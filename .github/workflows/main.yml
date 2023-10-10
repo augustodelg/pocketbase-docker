@@ -64,7 +64,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}},value=${{ steps.pocketbase.outputs.version }}
 
-      - name: Build and push linux/amd64
+      - name: Build and push 
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -77,35 +77,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
-          
-      - name: Build and push linux/arm64/v7
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          build-args: |
-            POCKETBASE_VERSION=${{ steps.pocketbase.outputs.version }}
-            TARGETPLATFORM=linux/arm64/v7
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/arm64/v7
-          
-      - name: Build and push linux/arm64/v8
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          push: true
-          build-args: |
-            POCKETBASE_VERSION=${{ steps.pocketbase.outputs.version }}
-            TARGETPLATFORM=linux/arm64/v8
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/arm64/v8
 
       - name: Overwrite version file
         run: |
@@ -122,3 +93,16 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
+          
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"          
+      - name: Upload digest
+        uses: actions/upload-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
