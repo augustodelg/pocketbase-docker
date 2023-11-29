@@ -113,8 +113,17 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)          
+          # Crear y empujar la lista de manifiesto
+          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }} $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' $(cat /tmp/digests/*))
+
+          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:latest $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' $(cat /tmp/digests/*))
+
+          # Empujar las etiquetas de versión y latest
+          docker push ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }}
+          docker push ${{ env.REGISTRY_IMAGE }}:latest
+        
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}          
