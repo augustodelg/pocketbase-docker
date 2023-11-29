@@ -110,11 +110,18 @@ jobs:
         with:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PASS_SECRET }}
-      - name: Create and push manifest list
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
         run: |
-          MANIFEST_DIGESTS=$(echo /tmp/digests/* | sed 's|/tmp/digests/|augustodelg/pocketbase@sha256:|g')
-          docker buildx imagetools create --tag augustodelg/pocketbase:${{ steps.pocketbase.outputs.version }} $MANIFEST_DIGESTS
-          docker buildx imagetools create --tag augustodelg/pocketbase:latest $MANIFEST_DIGESTS
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+
+          docker tag ${{ env.REGISTRY_IMAGE }}@$(cat digests) ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }}
+          docker push ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }}
+
+          docker tag ${{ env.REGISTRY_IMAGE }}@$(cat digests) ${{ env.REGISTRY_IMAGE }}:latest
+          docker push ${{ env.REGISTRY_IMAGE }}:latest
+
 
       - name: Inspect image
         run: |
