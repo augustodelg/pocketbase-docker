@@ -87,6 +87,13 @@ jobs:
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
+      - name: Save version to file
+        run: echo ${{ steps.pocketbase.outputs.version }} > version.txt
+      - name: Upload version file
+        uses: actions/upload-artifact@v2
+        with:
+          name: version
+          path: version.txt
 
   merge:
     runs-on: ubuntu-latest
@@ -98,6 +105,14 @@ jobs:
         with:
           name: digests
           path: /tmp/digests
+      - name: Download version file
+        uses: actions/download-artifact@v2
+        with:
+          name: version
+          path: .
+      - name: Read version from file
+        id: version
+        run: echo "::set-output name=version::$(cat version.txt)"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Docker meta
@@ -114,19 +129,19 @@ jobs:
         working-directory: /tmp/digests
         run: |
           # Crear y empujar la lista de manifiesto
-          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }} $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.version }} $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' $(cat /tmp/digests/*))
 
           docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:latest $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' $(cat /tmp/digests/*))
 
           # Empujar las etiquetas de versión y latest
-          docker push ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }}
+          docker push ${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.version }}
           docker push ${{ env.REGISTRY_IMAGE }}:latest
         
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}          
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.version }}          
           
       - name: Checkout
         uses: actions/checkout@v3
