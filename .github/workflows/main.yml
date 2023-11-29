@@ -112,9 +112,9 @@ jobs:
           password: ${{ secrets.PASS_SECRET }}
       - name: Create and push manifest list
         run: |
-          MANIFEST_DIGESTS=$(echo /tmp/digests/* | sed 's|/tmp/digests/|${{ env.REGISTRY_IMAGE }}@sha256:|g')
-          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }} $MANIFEST_DIGESTS
-          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:latest $MANIFEST_DIGESTS
+          MANIFEST_DIGESTS=$(echo /tmp/digests/* | sed 's|/tmp/digests/|augustodelg/pocketbase@sha256:|g')
+          docker buildx imagetools create --tag augustodelg/pocketbase:${{ steps.pocketbase.outputs.version }} $MANIFEST_DIGESTS
+          docker buildx imagetools create --tag augustodelg/pocketbase:latest $MANIFEST_DIGESTS
 
       - name: Inspect image
         run: |
