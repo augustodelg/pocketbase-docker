@@ -125,21 +125,15 @@ jobs:
         with:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PASS_SECRET }}
-      - name: Check digests content
-        run: |
-          echo "Digests:"
-          cat /tmp/digests/*
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          # Crear y empujar la lista de manifiesto
           docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.version }} $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' $(cat /tmp/digests/*))
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
-          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:latest $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' $(cat /tmp/digests/*))
+          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:latest  $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
-          # Empujar las etiquetas de versión y latest
           docker push ${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.version }}
           docker push ${{ env.REGISTRY_IMAGE }}:latest
         
