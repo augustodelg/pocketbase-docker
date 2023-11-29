@@ -125,6 +125,10 @@ jobs:
         with:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PASS_SECRET }}
+      - name: Check digests content
+        run: |
+          echo "Digests:"
+          cat /tmp/digests/*
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
