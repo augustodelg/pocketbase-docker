@@ -114,18 +114,10 @@ jobs:
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
-
-          docker tag ${{ env.REGISTRY_IMAGE }}@$(cat digests) ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }}
-          docker push ${{ env.REGISTRY_IMAGE }}:${{ steps.pocketbase.outputs.version }}
-
-          docker tag ${{ env.REGISTRY_IMAGE }}@$(cat digests) ${{ env.REGISTRY_IMAGE }}:latest
-          docker push ${{ env.REGISTRY_IMAGE }}:latest
-
-
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)          
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}          
           
       - name: Checkout
         uses: actions/checkout@v3
