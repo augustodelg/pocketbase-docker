@@ -57,36 +57,35 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
-            type=semver,pattern={{version}},value=${{ steps.pocketbase.outputs.version }}-${{ matrix.platform }}
+            type=semver,pattern={{version}},value=${{ steps.pocketbase.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.pocketbase.outputs.version }}
+            type=semver,pattern={{major}},value=${{ steps.pocketbase.outputs.version }}
 
       - name: Build and push 
         id: build
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: ${{ matrix.platform }}
+          push: true
+          provenance: false
+          platforms: linux/amd64,linux/arm64
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             POCKETBASE_VERSION=${{ steps.pocketbase.outputs.version }}
             TARGETPLATFORM=${{ matrix.platform }}
           tags: ${{ steps.meta.outputs.tags }}
-          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-      - name: Export digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"          
-      - name: Upload digest
-        uses: actions/upload-artifact@v3
+          
+      - name: Save version to file
+        run: echo ${{ steps.pocketbase.outputs.version }} > version.txt
+      - name: Upload version file
+        uses: actions/upload-artifact@v2
         with:
-          name: digests
-          path: /tmp/digests/*
-          if-no-files-found: error
-          retention-days: 1
+          name: version
+          path: version.txt
 
   merge:
     runs-on: ubuntu-latest
@@ -98,6 +97,14 @@ jobs:
         with:
           name: digests
           path: /tmp/digests
+      - name: Download version file
+        uses: actions/download-artifact@v2
+        with:
+          name: version
+          path: .
+      - name: Read version from file
+        id: version
+        run: echo "::set-output name=version::$(cat version.txt)"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Docker meta
@@ -110,15 +117,21 @@ jobs:
         with:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PASS_SECRET }}
-      - name: Create and push manifest list
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
         run: |
-          MANIFEST_DIGESTS=$(echo /tmp/digests/* | sed 's|/tmp/digests/|augustodelg/pocketbase@sha256:|g')
-          docker buildx imagetools create --tag augustodelg/pocketbase:${{ steps.pocketbase.outputs.version }} $MANIFEST_DIGESTS
-          docker buildx imagetools create --tag augustodelg/pocketbase:latest $MANIFEST_DIGESTS
+          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.version }} $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
 
+          docker buildx imagetools create --tag ${{ env.REGISTRY_IMAGE }}:latest  $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
+
+          docker push ${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.version }}
+          docker push ${{ env.REGISTRY_IMAGE }}:latest
+        
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.version }}          
           
       - name: Checkout
         uses: actions/checkout@v3
