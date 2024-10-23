@@ -32,7 +32,10 @@ RUN chown pocketbase:pocketbase /pb_migrations
 RUN chmod 710 /usr/local/bin/pocketbase
 
 VOLUME /pb_data
+VOLUME /pb_public
+VOLUME /pb_migrations
+
 USER pocketbase
 EXPOSE 8090
 
-ENTRYPOINT ["/usr/local/bin/pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb_data"]
+ENTRYPOINT ["/usr/local/bin/pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb_data", "--publicDir=/pb_public", "--migrationsDir=/pb_migrations"]

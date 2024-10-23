@@ -14,23 +14,25 @@
 
 ## Docker Run
 ```bash
-docker run --name pocketbase -p 8090:8090 -v pocketbase-data:/pb_data augustodelg/pocketbase:latest
+docker run --name pocketbase -p 8090:8090 -v pocketbase-data:/pb_data -v ./public:/pb_public -v ./migrations:/pb_migrations augustodelg/pocketbase:latest
 ```
 ## Docker Compose
 
 docker-compose.example.yaml
 
-```bash
+```yml
 version: '3.7'
 
 services:
   pocketbase:
-    image: augustodelg/pocketbase:latest
-    restart: unless-stopped
+    image: augustodelg/pocketbase
     ports:
       - 8090:8090
     volumes:
       - pocketbase-data:/pb_data
+      - ./public:/pb_public
+      - ./migrations:/pb_migrations
+
 volumes:
   pocketbase-data:
 ```
