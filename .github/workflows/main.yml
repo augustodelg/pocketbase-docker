@@ -1,6 +1,6 @@
-# WorkFlow based in @muchobien
+# WorkFlow basado en @muchobien
 
-name: Relase on pocketbase/release
+name: Release on pocketbase/release
 on:
   schedule:
     - cron: "0 0 * * *"
@@ -12,6 +12,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      pocketbase_version: ${{ steps.pocketbase.outputs.version }}
     strategy:
       fail-fast: false
       matrix:
@@ -32,8 +34,8 @@ jobs:
       - name: Read file contents
         id: set_processed_version
         run: |
-          version=`cat ./.version`
-          echo "::set-output name=processed_version::$version"
+          version=$(cat ./.version)
+          echo "processed_version=$version" >> $GITHUB_OUTPUT
 
       - name: Cancel if there is no changes
         if: ${{ steps.pocketbase.outputs.version == steps.set_processed_version.outputs.processed_version && github.event_name != 'workflow_dispatch' }}
@@ -41,7 +43,6 @@ jobs:
         with:
           script: |
             core.setFailed('Version already released')
-
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -75,11 +76,13 @@ jobs:
             TARGETPLATFORM=${{ matrix.platform }}
           tags: ${{ steps.meta.outputs.tags }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
       - name: Export digest
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${digest#sha256:}"          
+
       - name: Upload digest
         uses: actions/upload-artifact@v3
         with:
@@ -98,40 +101,38 @@ jobs:
         with:
           name: digests
           path: /tmp/digests
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.PASS_SECRET }}
+
       - name: Create and push manifest list
         run: |
           MANIFEST_DIGESTS=$(echo /tmp/digests/* | sed 's|/tmp/digests/|augustodelg/pocketbase@sha256:|g')
-          docker buildx imagetools create --tag augustodelg/pocketbase:${{ steps.pocketbase.outputs.version }} $MANIFEST_DIGESTS
+          docker buildx imagetools create --tag augustodelg/pocketbase:${{ needs.build.outputs.pocketbase_version }} $MANIFEST_DIGESTS
           docker buildx imagetools create --tag augustodelg/pocketbase:latest $MANIFEST_DIGESTS
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
-          
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ needs.build.outputs.pocketbase_version }}
+              
       - name: Checkout
         uses: actions/checkout@v3
-        
+            
       - name: Overwrite version file
         run: |
-          echo "${{ steps.pocketbase.outputs.version }}" >  .version
+          echo "${{ needs.build.outputs.pocketbase_version }}" > .version
 
       - name: Commit files
         run: |
           git config --local user.email "taca@github-actions.com"
           git config --local user.name "taca-bot"
-          git commit -m "Commit for version ${{ steps.pocketbase.outputs.version }}" -a
+          git commit -m "Commit for version ${{ needs.build.outputs.pocketbase_version }}" -a
 
       - name: Push changes
         uses: ad-m/github-push-action@master
