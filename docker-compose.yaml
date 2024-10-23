@@ -6,6 +6,9 @@ services:
     ports:
       - 8090:8090
     volumes:
-      - pocketbase:/usr/local/bin/pb_data
+      - pocketbase-data:/pb_data
+      - ./public:/pb_public
+      - ./migrations:/pb_migrations
+
 volumes:
-  pocketbase:
+  pocketbase-data:
